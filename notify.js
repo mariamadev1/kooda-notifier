@@ -237,6 +237,61 @@ async function processReminders(now) {
   }
 }
 
+// ───────── Nouveau devoir : prévenir les membres concernés ─────────
+
+const NEW_LABEL = {
+  homework: "Nouveau devoir",
+  evaluation: "Nouvelle évaluation",
+  event: "Nouvelle sortie",
+};
+
+async function processNewHomeworks() {
+  const snap = await db
+    .collectionGroup("homeworks")
+    .where("announce", "==", true)
+    .get();
+  console.log(`📢 ${snap.size} nouveau(x) devoir(s) à annoncer`);
+
+  for (const doc of snap.docs) {
+    const d = doc.data();
+
+    // Une seule annonce : on efface le drapeau avant d'envoyer
+    if (!DRY) await doc.ref.update({ announce: FieldValue.delete() });
+
+    const startMs =
+      d.start && typeof d.start.toMillis === "function" ? d.start.toMillis() : null;
+
+    // Tous les destinataires sauf l'auteur
+    const users = (await recipientsOf(doc.ref.path)).filter(
+      (u) => u.uid !== d.createdBy,
+    );
+
+    let author = null;
+    if (d.createdBy) {
+      const [u] = await db.getAll(db.doc(`users/${d.createdBy}`));
+      author = u.exists ? u.data().pseudo : null;
+    }
+
+    const notification = {
+      title: `${EMOJI[d.type] || "📚"} ${NEW_LABEL[d.type] || "Nouveau devoir"} · ${d.subject || "Général"}`,
+      body:
+        `${d.title}` +
+        (startMs ? ` — pour ${whenText(new Date(startMs))}` : "") +
+        (author ? `\nAjouté par ${author}` : ""),
+    };
+
+    if (DRY) {
+      console.log(`[DRY] ${doc.ref.path} → ${users.length} personne(s) :`, notification);
+      continue;
+    }
+    const n = await pushTo(users, notification, {
+      type: "new_homework",
+      homeworkPath: doc.ref.path, // toucher la notification ouvre la fiche du devoir
+    });
+    console.log(`✅ Nouveau devoir ${doc.ref.path} → ${n} appareil(s)`);
+  }
+}
+
 // ───────── 2. Message à l'admin quand quelqu'un rejoint un groupe ─────────
 
 async function processJoins() {
@@ -306,7 +361,12 @@ async function cleanup() {
 (async () => {
   const now = Date.now();
   let failed = false;
-  for (const step of [() => processReminders(now), processJoins, cleanup]) {
+  for (const step of [
+    () => processReminders(now),
+    processJoins,
+    processNewHomeworks, // 👈 nouveau
+    cleanup,
+  ]) {
     try {
       await step();
     } catch (e) {
