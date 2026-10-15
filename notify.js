@@ -216,8 +216,11 @@ async function processReminders(now) {
 
     try {
       const users = await recipientsOf(r.path);
+      const subject = r.path.startsWith("users/")
+        ? "Personnel"
+        : r.data.subject || "Devoir";
       const notification = {
-        title: `${EMOJI[r.data.type] || "📚"} ${r.data.subject || "Devoir"} · ${r.data.title}`,
+        title: `${EMOJI[r.data.type] || "📚"} ${subject} · ${r.data.title}`,
         body:
           bodyFor(r.key, r.startMs, now) +
           (r.data.location ? `\n📍 ${r.data.location}` : ""),
