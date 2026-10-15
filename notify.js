@@ -218,7 +218,9 @@ async function processReminders(now) {
       const users = await recipientsOf(r.path);
       const notification = {
         title: `${EMOJI[r.data.type] || "📚"} ${r.data.subject || "Devoir"} · ${r.data.title}`,
-        body: bodyFor(r.key, r.startMs, now),
+        body:
+          bodyFor(r.key, r.startMs, now) +
+          (r.data.location ? `\n📍 ${r.data.location}` : ""),
       };
       if (DRY) {
         console.log(`[DRY] ${r.path} (${r.key}) → ${users.length} personne(s) :`, notification);
