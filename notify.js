@@ -255,6 +255,10 @@ async function processNewHomeworks() {
     .collectionGroup("homeworks")
     .where("announce", "==", true)
     .get();
+
+  const blocked = new Set(userData.blockedUsers || []);
+  if (blocked.has(hw.createdBy)) continue;
+  
   console.log(`📢 ${snap.size} nouveau(x) devoir(s) à annoncer`);
 
   for (const doc of snap.docs) {
