@@ -215,7 +215,9 @@ async function processReminders(now) {
     }
 
     try {
-      const users = await recipientsOf(r.path);
+      const users = (await recipientsOf(r.path)).filter(
+        (u) => !(u.data.blockedUsers || []).includes(r.data.createdBy),
+      );
       const subject = r.path.startsWith("users/")
         ? "Personnel"
         : r.data.subject || "Devoir";
@@ -255,9 +257,6 @@ async function processNewHomeworks() {
     .collectionGroup("homeworks")
     .where("announce", "==", true)
     .get();
-
-  const blocked = new Set(userData.blockedUsers || []);
-  if (blocked.has(hw.createdBy)) continue;
   
   console.log(`📢 ${snap.size} nouveau(x) devoir(s) à annoncer`);
 
@@ -272,7 +271,9 @@ async function processNewHomeworks() {
 
     // Tous les destinataires sauf l'auteur
     const users = (await recipientsOf(doc.ref.path)).filter(
-      (u) => u.uid !== d.createdBy,
+      (u) =>
+        u.uid !== d.createdBy &&
+        !(u.data.blockedUsers || []).includes(d.createdBy),
     );
 
     let author = null;
