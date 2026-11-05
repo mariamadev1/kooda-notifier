@@ -28,7 +28,6 @@ const REMINDERS = {
   oneDayBefore: { ms: 24 * HOUR, label: "Demain" },
   twoHoursBefore: { ms: 2 * HOUR, label: "Dans 2 heures" },
 };
-const EMOJI = { homework: "", evaluation: "", event: "" };
 const ADMIN_KEYS = ["creatorUid", "createdBy", "adminUid", "ownerUid", "admin"];
 
 // ───────── Outils ─────────
@@ -222,7 +221,7 @@ async function processReminders(now) {
         ? "Personnel"
         : r.data.subject || "Devoir";
       const notification = {
-        title: `${EMOJI[r.data.type] || "📚"} ${subject} · ${r.data.title}`,
+        title: `${subject} · ${r.data.title}`,
         body:
           bodyFor(r.key, r.startMs, now) +
           (r.data.location ? `\n📍 ${r.data.location}` : ""),
@@ -283,7 +282,7 @@ async function processNewHomeworks() {
     }
 
     const notification = {
-      title: `${EMOJI[d.type] || "📚"} ${NEW_LABEL[d.type] || "Nouveau devoir"} · ${d.subject || "Général"}`,
+      title: `${NEW_LABEL[d.type] || "Nouveau devoir"} · ${d.subject || "Général"}`,
       body:
         `${d.title}` +
         (startMs ? ` — pour ${whenText(new Date(startMs))}` : "") +
