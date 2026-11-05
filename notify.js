@@ -10,7 +10,7 @@ const crypto = require("crypto");
 
 const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
 if (!raw) {
-  console.error("❌ FIREBASE_SERVICE_ACCOUNT manquant");
+  console.error("FIREBASE_SERVICE_ACCOUNT manquant");
   process.exit(1);
 }
 initializeApp({ credential: cert(JSON.parse(raw)) });
@@ -146,7 +146,7 @@ async function pushTo(users, notification, data) {
       ) {
         dead.push(chunk[idx]);
       } else if (!r.success) {
-        console.warn("⚠️ Envoi en échec :", code);
+        console.warn("Envoi en échec :", code);
       }
     });
   }
@@ -187,7 +187,7 @@ async function findDue(now) {
 
 async function processReminders(now) {
   const due = await findDue(now);
-  console.log(`⏰ ${due.length} rappel(s) à traiter`);
+  console.log(`${due.length} rappel(s) à traiter`);
 
   for (const r of due) {
     if (r.startMs <= now) continue; // le devoir est déjà passé
@@ -224,7 +224,7 @@ async function processReminders(now) {
         title: `${subject} · ${r.data.title}`,
         body:
           bodyFor(r.key, r.startMs, now) +
-          (r.data.location ? `\n📍 ${r.data.location}` : ""),
+          (r.data.location ? `\n ${r.data.location}` : ""),
       };
       if (DRY) {
         console.log(`[DRY] ${r.path} (${r.key}) → ${users.length} personne(s) :`, notification);
@@ -234,11 +234,11 @@ async function processReminders(now) {
         type: "reminder",
         homeworkPath: r.path,
       });
-      console.log(`✅ ${r.path} (${r.key}) → ${n} appareil(s)`);
+      console.log(`${r.path} (${r.key}) → ${n} appareil(s)`);
     } catch (e) {
       // Échec complet : on libère la réservation pour réessayer au prochain tour
       if (!DRY) await claim.delete().catch(() => {});
-      console.error("❌ Rappel en échec", r.path, e);
+      console.error("Rappel en échec", r.path, e);
     }
   }
 }
@@ -297,7 +297,7 @@ async function processNewHomeworks() {
       type: "new_homework",
       homeworkPath: doc.ref.path, // toucher la notification ouvre la fiche du devoir
     });
-    console.log(`✅ Nouveau devoir ${doc.ref.path} → ${n} appareil(s)`);
+    console.log(`Nouveau devoir ${doc.ref.path} → ${n} appareil(s)`);
   }
 }
 
@@ -308,7 +308,7 @@ async function processJoins() {
     .collectionGroup("members")
     .where("announce", "==", true)
     .get();
-  console.log(`👋 ${snap.size} nouveau(x) membre(s) à annoncer`);
+  console.log(`${snap.size} nouveau(x) membre(s) à annoncer`);
 
   for (const doc of snap.docs) {
     const seg = doc.ref.path.split("/");
@@ -339,7 +339,7 @@ async function processJoins() {
 
     const users = await loadUsers([...admins]);
     const notification = {
-      title: "👋 Nouveau membre",
+      title: "Nouveau membre",
       body: `${name || "Un nouvel élève"} a rejoint « ${gd.name || "ton groupe"} »`,
     };
     if (DRY) {
@@ -347,7 +347,7 @@ async function processJoins() {
       continue;
     }
     await pushTo(users, notification, { type: "member_joined", groupId: gid });
-    console.log(`✅ Admin prévenu pour ${gid}`);
+    console.log(`Admin prévenu pour ${gid}`);
   }
 }
 
@@ -373,14 +373,14 @@ async function cleanup() {
   for (const step of [
     () => processReminders(now),
     processJoins,
-    processNewHomeworks, // 👈 nouveau
+    processNewHomeworks,
     cleanup,
   ]) {
     try {
       await step();
     } catch (e) {
       failed = true;
-      console.error("❌", e);
+      console.error("Error", e);
     }
   }
   process.exit(failed ? 1 : 0);
