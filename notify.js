@@ -28,7 +28,7 @@ const REMINDERS = {
   oneDayBefore: { ms: 24 * HOUR, label: "Demain" },
   twoHoursBefore: { ms: 2 * HOUR, label: "Dans 2 heures" },
 };
-const EMOJI = { homework: "📚", evaluation: "📝", event: "🎉" };
+const EMOJI = { homework: "", evaluation: "", event: "" };
 const ADMIN_KEYS = ["creatorUid", "createdBy", "adminUid", "ownerUid", "admin"];
 
 // ───────── Outils ─────────
