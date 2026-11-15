@@ -252,6 +252,7 @@ const NEW_LABEL = {
   homework: "Nouveau devoir",
   evaluation: "Nouvelle évaluation",
   event: "Nouvelle sortie",
+  revision: "Nouvelle révision",
 };
 
 async function processNewHomeworks() {
@@ -283,12 +284,7 @@ async function processNewHomeworks() {
     }
 
     const notification = {
-      const NEW_LABEL = {
-        homework: "Nouveau devoir",
-        evaluation: "Nouvelle évaluation",
-        event: "Nouvelle sortie",
-        revision: "Nouvelle révision",
-      };
+      title: `${NEW_LABEL[d.type] || "Nouveau devoir"} · ${d.subject || "Général"}`,
       body:
         `${d.title}` +
         (startMs ? ` — pour ${whenText(new Date(startMs))}` : "") +
