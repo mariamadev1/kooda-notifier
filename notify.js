@@ -73,6 +73,11 @@ function canSee(structures, target) {
   return true;
 }
 
+function wants(user, key) {
+  const p = user.data.reminderPrefs;
+  return !(p && p[key] === false);
+}
+
 // ───────── Utilisateurs (avec cache pour la durée d'une exécution) ─────────
 
 const userCache = new Map(); // uid -> données | null
@@ -214,9 +219,7 @@ async function processReminders(now) {
     }
 
     try {
-      const users = (await recipientsOf(r.path)).filter(
-        (u) => !(u.data.blockedUsers || []).includes(r.data.createdBy),
-      );
+      const users = (await recipientsOf(r.path)).filter((u) => wants(u, r.key));
       const subject = r.path.startsWith("users/")
         ? "Personnel"
         : r.data.subject || "Devoir";
@@ -270,9 +273,7 @@ async function processNewHomeworks() {
 
     // Tous les destinataires sauf l'auteur
     const users = (await recipientsOf(doc.ref.path)).filter(
-      (u) =>
-        u.uid !== d.createdBy &&
-        !(u.data.blockedUsers || []).includes(d.createdBy),
+      (u) => u.uid !== d.createdBy && wants(u, "newHomework"),
     );
 
     let author = null;
@@ -282,7 +283,12 @@ async function processNewHomeworks() {
     }
 
     const notification = {
-      title: `${NEW_LABEL[d.type] || "Nouveau devoir"} · ${d.subject || "Général"}`,
+      const NEW_LABEL = {
+        homework: "Nouveau devoir",
+        evaluation: "Nouvelle évaluation",
+        event: "Nouvelle sortie",
+        revision: "Nouvelle révision",
+      };
       body:
         `${d.title}` +
         (startMs ? ` — pour ${whenText(new Date(startMs))}` : "") +
