@@ -18,7 +18,7 @@ const db = getFirestore();
 
 const DRY = !!process.env.DRY_RUN; // DRY_RUN=1 : affiche sans rien envoyer
 const TZ = "Europe/Zurich";
-const LATE_MIN = Number(process.env.LATE_MINUTES || 120); // rattrapage max
+const LATE_MIN = Number(process.env.LATE_MINUTES || 180); // rattrapage max
 
 const HOUR = 3600 * 1000;
 const REMINDERS = {
